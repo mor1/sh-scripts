@@ -13,7 +13,7 @@ Environment manipulation shell functions.
 * **cenv**: clean environment variable, removing repeats
 * **ppkl**: pretty-print a Python pickle file
 * **ctime**: pretty-print time given as seconds from Unix epoch
-* **ps1txt set primary prompt for a console
+* **ps1txt**: set primary prompt for a console
 * **ps1xt**: set primary prompt for an XTerm
 
 
