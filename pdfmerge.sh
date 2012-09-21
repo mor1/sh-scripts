@@ -41,7 +41,7 @@ if [ "$outf" = "" ] ; then usage ; fi
 printf "Merging files [ %s ] into %s\n" "$*" "$outf"
 
 rm -f $tmpf
-echo "\documentclass{article}" >> $tmpf
+echo "\documentclass[a4]{article}" >> $tmpf
 echo "\usepackage{pdfpages}" >> $tmpf
 echo "\begin{document}" >> $tmpf
 while [ "$1" != "" ] ; do
