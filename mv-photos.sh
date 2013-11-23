@@ -25,7 +25,7 @@ set -o noclobber
 for n in *.JPG; do
   LINE=$(ls -lT $n | tr -s " ")
   y=$(echo ${LINE} | cut -d " " -f 9)
-  case $(echo ${LINE} | cut -d " " -f 6) in
+  case $(echo ${LINE} | cut -d " " -f 7) in
     Jan ) m="01" ;;
     Feb ) m="02" ;;
     Mar ) m="03" ;;
@@ -39,10 +39,10 @@ for n in *.JPG; do
     Nov ) m="11" ;;
     Dec ) m="12" ;;
   esac
-  d=$(printf "%02s" $(echo ${LINE} | cut -d " " -f 7))
+  d=$(printf "%02s" $(echo ${LINE} | cut -d " " -f 6))
   sd=${y}-${m}-${d}
   
-  f=$(echo ${LINE} | tr -s " " | cut -f 10 -d " ")
+  f=$(echo ${LINE} | cut -f 10 -d " ")
   [ ! -d ${sd} ] && mkdir ${sd} 
   mv $f $sd
 done
