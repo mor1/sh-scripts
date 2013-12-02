@@ -1,4 +1,4 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 #
 # Wrapper for GS to merge PDF files.
 #

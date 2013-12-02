@@ -108,7 +108,7 @@ b2d () {
         local n=$1
         local ret=0
         local base=1
-        
+
         local lsd
 
         while [ $n ]; do
@@ -152,7 +152,7 @@ o2d () {
                 n=${n%$lsc}
         done
 
-        echo $ret                
+        echo $ret
 }
 
 ########################################################################
@@ -213,7 +213,7 @@ prip () {
                 echo "Usage: prip <addr> : print <addr> (hex, netendian) as dotted quad"
                 return 1;
         fi
-        
+
 
         local argsdone=0
         local NETENDIAN=1
@@ -276,7 +276,7 @@ dswp () {
                 echo "Usage: dswp <num> : print <num> (decimal) byte-swapped"
                 return 1;
         fi
-        
+
         local n=0x`d2h $1`
 
         #

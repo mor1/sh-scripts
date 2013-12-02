@@ -7,7 +7,7 @@ envfns
 
 Environment manipulation shell functions.
 
-* **denv**: remove all occurrences of value from environment variable 
+* **denv**: remove all occurrences of value from environment variable
 * **aenv**: add value to start of given environment variable
 * **enva**: add value to end of given environment variable
 * **cenv**: clean environment variable, removing repeats
@@ -46,7 +46,7 @@ Some simple number base conversion shell functions.  Because I can.
 * **d2o/o2d**: decimal-octal conversion
 * **d2h/h2d**: decimal-hex conversion
 * **dswp**: print decimal number as byte-swapped
-* **prip**: print IP address given as network-endian hex as dotted quad 
+* **prip**: print IP address given as network-endian hex as dotted quad
 
 
 pdfmerge

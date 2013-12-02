@@ -1,4 +1,4 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 #
 # Move photos from current directory into subdirs by date.
 #
@@ -41,8 +41,8 @@ for n in *.JPG; do
   esac
   d=$(printf "%02s" $(echo ${LINE} | cut -d " " -f 6))
   sd=${y}-${m}-${d}
-  
+
   f=$(echo ${LINE} | cut -f 10 -d " ")
-  [ ! -d ${sd} ] && mkdir ${sd} 
+  [ ! -d ${sd} ] && mkdir ${sd}
   mv $f $sd
 done
