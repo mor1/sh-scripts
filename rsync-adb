@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# Move photos from current directory into subdirs by date.
+#
+# Copyright (C) 2016 Richard Mortier <mort@cantab.net>.  All Rights
+# Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+# USA.
+
+set -ex
+
+T=$(mktemp -d "${TMPDIR:-/tmp}"/rsync-adb.XXXXXX)
+function onexit {
+    rm -rf "$T"
+}
+trap onexit EXIT
+
+adb shell ls /sdcard/DCIM/Camera | tr -d '\r' >| $T/remote
+[ \! -d "Camera" ] && mkdir Camera
+ls -1 Camera >| $T/local
+
+for f in $(diff -u $T/local $T/remote | grep "^+[IV]" | tr -d "+") ; do
+    echo == $f
+    adb pull -p -a /sdcard/DCIM/Camera/$f Camera
+done
+
+find Camera -type f | xargs chmod 644
