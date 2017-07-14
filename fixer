@@ -1,0 +1,97 @@
+#!/bin/bash
+#
+# Copyright (C) 2017 Richard Mortier <mort@cantab.net>.  All Rights
+# Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+# USA.
+
+set -ex
+
+## constants
+FIXER=https://api.fixer.io
+
+## defaults
+BASE=GBP
+SYMBOLS=USD,EUR
+DATE=$(date +%Y-%m-%d)
+
+ARGS=
+while [[ $# > 0 ]]; do
+  OPTIND=1
+  while getopts -- "b:s:-:" optchar; do
+    case "$optchar" in
+      b)
+        BASE="$2"
+        shift 2
+        break
+        ;;
+
+      s)
+        SYMBOLS="$2"
+        shift 2
+        break
+        ;;
+
+      -)
+        case "$OPTARG" in
+          base)
+            BASE="$2"
+            shift 2
+            break
+            ;;
+          base=*)
+            BASE="${OPTARG#*=}"
+            shift
+            break
+            ;;
+
+          symbols)
+            SYMBOLS="$2"
+            shift 2
+            break
+            ;;
+          symbols=*)
+            SYMBOLS="${OPTARG#*=}"
+            shift
+            break
+            ;;          
+
+          *)
+            ARGS="$ARGS $1"
+            shift
+            break
+            ;;
+        esac
+        break
+        ;;
+
+      *)
+        ARGS="$ARGS $1"
+        shift
+        break
+        ;;
+    esac
+  done
+  while [[ $# > 0 && ${1:0:1} != "-" ]]; do
+    ARGS="$ARGS $1"
+    shift
+  done
+done
+
+set -- $ARGS
+[[ $# > 0 ]] && DATE=$1 || true
+
+curl -s "$FIXER/$DATE?base=$BASE&symbols=$SYMBOLS" \
+  | docker run -i mor1/jq .rates
