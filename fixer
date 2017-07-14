@@ -17,7 +17,12 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 # USA.
 
-set -ex
+set -e
+## debug
+if [[ "$FIXER_DEBUG" = "true" ]]; then
+  set -x
+  PS4='$LINENO: '
+fi
 
 ## constants
 FIXER=https://api.fixer.io
@@ -27,10 +32,19 @@ BASE=GBP
 SYMBOLS=USD,EUR
 DATE=$(date +%Y-%m-%d)
 
+usage () {
+  echo "Request exchange rate between BASE currency and a list"
+  echo "  of target currency SYMBOLs on a given DATE"
+  echo "Usage: $0 [-b|--base=BASE] [-s|--symbols=SYMBOLS] DATE"
+  echo "  -b|--base[=]BASE       set the base currency ($BASE)"
+  echo "  -s|--symobls[=]SYMBOLS comma-separated list of target currencies ($SYMBOLS)"
+  echo "DATE format is yyyy-mm-dd ($DATE)"
+}
+
 ARGS=
 while [[ $# > 0 ]]; do
   OPTIND=1
-  while getopts -- "b:s:-:" optchar; do
+  while getopts -- "b:s:-:h" optchar; do
     case "$optchar" in
       b)
         BASE="$2"
@@ -66,21 +80,24 @@ while [[ $# > 0 ]]; do
             SYMBOLS="${OPTARG#*=}"
             shift
             break
-            ;;          
+            ;;
+
+          help)
+            usage
+            exit 0
+            ;;
 
           *)
-            ARGS="$ARGS $1"
-            shift
-            break
+            usage
+            exit 1
             ;;
         esac
         break
         ;;
 
       *)
-        ARGS="$ARGS $1"
-        shift
-        break
+        usage
+        exit 1
         ;;
     esac
   done
