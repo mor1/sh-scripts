@@ -19,7 +19,12 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 # USA.
 
-set -ex
+pushd ~/me/footprint/photos/raw/photos-nexus5x-raw
+
+set -e
+if [[ "$RSYNC_ADB_DEBUG" = "true" ]]; then
+  set -x
+fi
 
 T=$(mktemp -d "${TMPDIR:-/tmp}"/rsync-adb.XXXXXX)
 function onexit {
@@ -27,13 +32,15 @@ function onexit {
 }
 trap onexit EXIT
 
-adb shell ls /sdcard/DCIM/Camera | tr -d '\r' >| $T/remote
+adb shell ls -1 /sdcard/DCIM/Camera >| $T/remote
 [ \! -d "Camera" ] && mkdir Camera
 ls -1 Camera >| $T/local
 
-for f in $(diff -u $T/local $T/remote | grep "^+[IV]" | tr -d "+") ; do
+for f in $(diff -u $T/local $T/remote | grep "^+[IVP]" | tr -d "+") ; do
     echo == $f
     adb pull -p -a /sdcard/DCIM/Camera/$f Camera
 done
 
 find Camera -type f | xargs chmod 644
+
+popd
