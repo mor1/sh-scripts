@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# Sync mediapc locally
+#
+# Copyright (C) 2016 Richard Mortier <mort@cantab.net>.  All Rights
+# Reserved.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
+# USA.
+
+pushd ~/me/itunes/Music
+
+set -e
+if [[ "$RSYNC_MEDIAPC_DEBUG" = "true" ]]; then
+  set -x
+fi
+
+T=$(mktemp -d "${TMPDIR:-/tmp}"/rsync-mediapc.XXXXXX)
+function onexit {
+  umount "$T"
+  rmdir "$T"
+}
+trap onexit EXIT
+
+SSHFSOPTS="\
+  -o follow_symlinks\
+  -o auto_cache\
+  -o reconnect\
+  -o defer_permissions\
+  -o noappledouble\
+  -o nolocalcaches\
+  -o no_readahead"
+SSHFS="sshfs $SSHFSOPTS"
+
+# RSYNC="rsync -PCavzi"
+RSYNC="rsync -Pavzi --delete-during --delete-excluded \
+             --exclude Thumbs.db --exclude .DS_Store --exclude desktop.ini"
+REMOTE=root@mediapc.lan
+
+$SSHFS $REMOTE:/storage/music/ "$T"
+$RSYNC . "$T"/
+
+popd
