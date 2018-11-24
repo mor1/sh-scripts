@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Move photos from current directory into subdirs by date.
 #
