@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# Move photos from current directory into subdirs by date.
+# Copy data from phone
 #
-# Copyright (C) 2016 Richard Mortier <mort@cantab.net>.  All Rights
+# Copyright (C) 2016-2019 Richard Mortier <mort@cantab.net>.  All Rights
 # Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -19,28 +19,44 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 # USA.
 
-pushd ~/me/footprint/photos/raw/photos-nexus5x-raw
-
 set -e
-if [[ "$RSYNC_ADB_DEBUG" = "true" ]]; then
+if [[ "$RSYNC_PHONE_DEBUG" = "true" ]]; then
   set -x
 fi
 
-T=$(mktemp -d "${TMPDIR:-/tmp}"/rsync-adb.XXXXXX)
+## PHOTOS
+D=~/me/photos/incoming/nexus5x
+
+mkdir -p $D
+pushd $D
+
+T=$(mktemp -d "${TMPDIR:-/tmp}"rsync-adb.XXXXXX)
 function onexit {
-    rm -rf "$T"
+  echo rm -rf "$T"
 }
 trap onexit EXIT
 
-adb shell ls -1 /sdcard/DCIM/Camera >| $T/remote
-[ \! -d "Camera" ] && mkdir Camera
-ls -1 Camera >| $T/local
+## get incoming files
+adb shell ls -l /sdcard/DCIM/Camera/ | tr -s " " | cut -f 5,8 -d" " \
+  | sort -t" " -k 2 | uniq | grep '^[[:digit:]].*\.\(mp4\|jpg\)$' >| $T/remote
 
-for f in $(diff -u $T/local $T/remote | grep "^+[IVP]" | tr -d "+") ; do
-    echo == $f
-    adb pull -p -a /sdcard/DCIM/Camera/$f Camera
+## fix up list of already imported files
+ls -l [IPV]* | grep -v IMPORTED | tr -s " " | cut -d " " -f 5,9 >> IMPORTED
+cat IMPORTED \
+  | sort -t" " -k 2 | uniq | grep '^[[:digit:]].*\.\(mp4\|jpg\)$' >| $T/local
+
+## compare local and remote, and copy any missing or too small
+for f in $(diff -u $T/local $T/remote | grep "^+[^+]" | cut -d" " -f 2) ; do
+  echo == $f
+  adb pull -p -a /sdcard/DCIM/Camera/$f .
 done
 
-find Camera -type f | xargs chmod 644
+find . -type f | xargs chmod 644
 
+mv IMPORTED IMPORTED.old
+cp $T/local IMPORTED
+popd
+
+pushd ~/me/footprint/weightmeter
+adb pull -p -a /sdcard/Download/weightmeter .
 popd
