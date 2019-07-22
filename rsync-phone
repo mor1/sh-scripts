@@ -51,7 +51,22 @@ for f in $(diff -u $T/local $T/remote | grep "^+[^+]" | cut -d" " -f 2) ; do
   adb pull -p -a /sdcard/DCIM/Camera/$f .
 done
 
+## fix permissions and attributes
 find . -type f | xargs chmod 644
+xattr -cr *
+
+## fix naming
+docker run -i --rm -v "$(pwd -P)":/cwd -w /cwd \
+       mor1/jhead:latest -exonly -ft -n%Y%m%d-%H%M%S_ *.jpg
+
+for d in *.jpg ; do
+  _Y=${d:0:4}
+  _M=${d:4:2}
+  _D=${_Y}${_M}${d:6:2}
+  _dir=$_Y/$_M/$_D--
+  mkdir -p $_dir
+  mv $d $_dir
+done
 
 mv IMPORTED IMPORTED.old
 cp $T/local IMPORTED
