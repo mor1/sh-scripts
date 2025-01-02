@@ -1,6 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 #
-# Move photos from current directory into subdirs by date.
+# Restore specified files from last known commit in a git repo. Based on
+# <http://stackoverflow.com/questions/953481/restore-a-deleted-file-in-a-git-repo>
 #
 # Copyright (C) Richard Mortier <mort@cantab.net>. All Rights Reserved.
 #
@@ -16,30 +17,21 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place - Suite 330, Boston, MA 02111-1307, USA.
 
-export NO_PROMPT_VARS
-set -o noclobber
+set +ex
 
-for n in *.JPG; do
-  LINE=$(ls -lT $n | tr -s " ")
-  y=$(echo ${LINE} | cut -d " " -f 9)
-  case $(echo ${LINE} | cut -d " " -f 7) in
-    Jan ) m="01" ;;
-    Feb ) m="02" ;;
-    Mar ) m="03" ;;
-    Apr ) m="04" ;;
-    May ) m="05" ;;
-    Jun ) m="06" ;;
-    Jul ) m="07" ;;
-    Aug ) m="08" ;;
-    Sep ) m="09" ;;
-    Oct ) m="10" ;;
-    Nov ) m="11" ;;
-    Dec ) m="12" ;;
-  esac
-  d=$(printf "%02s" $(echo ${LINE} | cut -d " " -f 6))
-  sd=${y}-${m}-${d}
+restore ()
+{
+  ## ok, so the last $1 in the `git checkout` below was originally
+  ##   $(git diff --name-status $REV | grep "^D.*$1$" | cut -f 2)
+  ## which makes little sense to me: it sort-of canonicalises the filename
+  ## with a directory, or at least, the first instance of a file of that name
+  ## in the directory listing -- but surely you really want the instance
+  ## specified by the user, ie., just $1 ?!
 
-  f=$(echo ${LINE} | cut -f 10 -d " ")
-  [ ! -d ${sd} ] && mkdir ${sd}
-  mv $f $sd
+  git checkout $(git rev-list -n 1 HEAD -- $1)~1 -- $1
+  git add $1
+}
+
+for f in $@ ; do
+  echo $f && restore $f
 done

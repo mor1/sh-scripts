@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# Copy photos from iphone
+#
+# Copyright (C) Richard Mortier <mort@cantab.net>. All Rights Reserved.
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License version 2 as published by the Free
+# Software Foundation
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 59 Temple
+# Place - Suite 330, Boston, MA 02111-1307, USA.
+
+set -e
+if [[ "$RSYNC_IPHONE_DEBUG" = "true" ]]; then
+  set -x
+fi
+
+## mount iphone
+M=~/l/iphone
+idevicepair pair
+ifuse $M || true
+
+## grab photos
+D=~/u/me/photos/incoming/iphone
+mkdir -p $D
+
+T=$(mktemp -d /tmp/rsync-iphone.XXXXXX)
+function onexit {
+  popd
+  # rm -rf "$T"
+  fusermount -u $M
+}
+trap onexit EXIT
+
+## get incoming files
+pushd $M/DCIM
+fd -t f --exec-batch ls -l | tr -s " " | cut -f 5,9 -d " " | sort -t" " -k 2 \
+  | uniq | grep -Ei '^[[:digit:]].*.(mov|mp4|jpg|heic)$' >| $T/remote
+
+## compare local and remote, and copy any missing or too small
+if [ -r "$D/IMPORTED" ] && [ \! -z "$D/IMPORTED" ]; then
+  for PHOTO in $(diff -u $D/IMPORTED $T/remote | grep "^+[^+]" | cut -d" " -f 2) ; do
+    cp -av $f $PHOTO $D/$(basename $PHOTO)
+  done
+else
+  cat $T/remote | cut -d" " -f2 | while read PHOTO ; do cp -av $PHOTO $D ; done
+  cp $T/remote $D/IMPORTED
+fi
+popd
+
+pushd $D
+touch IMPORTED
+mv IMPORTED IMPORTED.old
+cat IMPORTED.old $T/remote | sort -t" " -k2 | uniq > IMPORTED
+
+exiftool -recurse -d "/home/mort/Pictures/%Y/%m/%Y%m%d--/%Y%m%d-%H%M%S_%%c.%%e" \
+         "-filename<filemodifydate" \
+         "-filename<createdate" \
+         "-filename<datetimeoriginal" \
+         .
